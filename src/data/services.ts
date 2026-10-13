@@ -323,5 +323,6 @@ export const DEFAULT_QUOTATION_DATA = {
   ],
   authorizedSignatoryName: "Authorized Signatory",
   authorizedSignatoryTitle: "YugoraTech",
-  closingNote: "If you have any questions or require further clarification, please feel free to contact us."
+  closingNote: "If you have any questions or require further clarification, please feel free to contact us.",
+  hideIndividualAmounts: false,
 };

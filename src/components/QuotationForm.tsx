@@ -13,7 +13,152 @@ import {
   ShieldCheck,
   Sparkles,
   Percent,
+  Calendar,
 } from 'lucide-react';
+
+// Helper to convert formatted/manual date string to YYYY-MM-DD for native date picker
+function parseToIsoDate(val: string): string {
+  if (!val || typeof val !== 'string') return '';
+  const trimmed = val.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  // Check dd/mm/yyyy or dd-mm-yyyy
+  const dmyMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (dmyMatch) {
+    const d = parseInt(dmyMatch[1], 10);
+    const m = parseInt(dmyMatch[2], 10);
+    const y = parseInt(dmyMatch[3], 10);
+    const date = new Date(y, m - 1, d);
+    if (!isNaN(date.getTime())) {
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+  }
+  const timestamp = Date.parse(trimmed);
+  if (!isNaN(timestamp)) {
+    const d = new Date(timestamp);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return '';
+}
+
+// Helper to format ISO YYYY-MM-DD to friendly quotation date (e.g., 28 August 2026)
+function formatIsoToQuotationDate(isoDate: string): string {
+  if (!isoDate) return '';
+  const parts = isoDate.split('-');
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const date = new Date(y, m, d);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+  }
+  return isoDate;
+}
+
+// Reusable Date input field supporting both manual typing and calendar picker
+interface DateInputFieldProps {
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+}
+
+const DateInputField: React.FC<DateInputFieldProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder = 'e.g. 28 August 2026',
+}) => {
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
+  const isoValue = parseToIsoDate(value);
+
+  const handleOpenPicker = () => {
+    if (dateInputRef.current) {
+      if ('showPicker' in HTMLInputElement.prototype) {
+        try {
+          dateInputRef.current.showPicker();
+          return;
+        } catch {
+          // Fallback
+        }
+      }
+      dateInputRef.current.focus();
+    }
+  };
+
+  return (
+    <div>
+      <label className="form-label">{label}</label>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="form-input"
+          placeholder={placeholder}
+          style={{ paddingRight: '2.5rem' }}
+        />
+        {/* Hidden native date input for calendar selection */}
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={isoValue}
+          onChange={(e) => {
+            if (e.target.value) {
+              onChange(formatIsoToQuotationDate(e.target.value));
+            }
+          }}
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            right: '0.35rem',
+            width: '2.2rem',
+            height: '2.2rem',
+            opacity: 0,
+            cursor: 'pointer',
+            zIndex: 3,
+          }}
+        />
+        {/* Calendar visual icon button */}
+        <button
+          type="button"
+          onClick={handleOpenPicker}
+          tabIndex={-1}
+          title="Pick date from calendar"
+          aria-label="Pick date from calendar"
+          style={{
+            position: 'absolute',
+            right: '0.4rem',
+            width: '2.2rem',
+            height: '2.2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            color: '#6366f1',
+            borderRadius: '6px',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        >
+          <Calendar size={17} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface QuotationFormProps {
   data: QuotationData;
@@ -192,24 +337,18 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               className="form-input"
             />
           </div>
-          <div>
-            <label className="form-label">Quotation Date</label>
-            <input
-              type="text"
-              value={data.date}
-              onChange={(e) => onChange({ ...data, date: e.target.value })}
-              className="form-input"
-            />
-          </div>
-          <div>
-            <label className="form-label">Validity (Until Date)</label>
-            <input
-              type="text"
-              value={data.validUntil}
-              onChange={(e) => onChange({ ...data, validUntil: e.target.value })}
-              className="form-input"
-            />
-          </div>
+          <DateInputField
+            label="Quotation Date"
+            value={data.date}
+            onChange={(val) => onChange({ ...data, date: val })}
+            placeholder="e.g. 28 August 2026"
+          />
+          <DateInputField
+            label="Validity (Until Date)"
+            value={data.validUntil}
+            onChange={(val) => onChange({ ...data, validUntil: val })}
+            placeholder="e.g. 27 September 2026"
+          />
           <div>
             <label className="form-label">Currency Symbol</label>
             <select
@@ -310,7 +449,29 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             <Sparkles size={17} color="#3b82f6" />
             <h3>Cost Breakdown &amp; Line Items</h3>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {data.items.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Clear all services from quotation?')) {
+                    recalculateTotals([], data.discountRate, data.taxRate);
+                  }
+                }}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: '6px',
+                  color: '#f87171',
+                  padding: '0.4rem 0.75rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Clear All
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenCatalog}
@@ -350,6 +511,106 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
             >
               <Plus size={14} />
               <span>Add Custom Row</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pricing Display Mode Card / Selector */}
+        <div
+          style={{
+            background: '#0b0f19',
+            border: '1px solid #1f2937',
+            borderRadius: '8px',
+            padding: '0.85rem 1rem',
+            marginTop: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc' }}>
+                Pricing Display Mode:
+              </span>
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '4px',
+                  fontWeight: 600,
+                  background: data.hideIndividualAmounts
+                    ? 'rgba(37, 99, 235, 0.2)'
+                    : 'rgba(16, 185, 129, 0.2)',
+                  color: data.hideIndividualAmounts ? '#60a5fa' : '#34d399',
+                  border: data.hideIndividualAmounts
+                    ? '1px solid rgba(59, 130, 246, 0.3)'
+                    : '1px solid rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                {data.hideIndividualAmounts
+                  ? 'Total Amount Only'
+                  : 'Itemized Pricing'}
+              </span>
+            </div>
+            <p
+              style={{
+                fontSize: '0.74rem',
+                color: '#94a3b8',
+                margin: '0.25rem 0 0 0',
+              }}
+            >
+              {data.hideIndividualAmounts
+                ? '✓ Only selected services are listed on quotation. Individual service prices are hidden; only Grand Total is visible.'
+                : 'Each service shows its individual rate and amount column on the quotation.'}
+            </p>
+          </div>
+
+          {/* Toggle pill selector */}
+          <div
+            style={{
+              display: 'flex',
+              background: '#111827',
+              padding: '0.2rem',
+              borderRadius: '6px',
+              border: '1px solid #374151',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onChange({ ...data, hideIndividualAmounts: false })}
+              style={{
+                background: !data.hideIndividualAmounts ? '#2563eb' : 'transparent',
+                color: !data.hideIndividualAmounts ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '5px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Itemized Pricing
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ ...data, hideIndividualAmounts: true })}
+              style={{
+                background: data.hideIndividualAmounts ? '#2563eb' : 'transparent',
+                color: data.hideIndividualAmounts ? '#ffffff' : '#94a3b8',
+                border: 'none',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '5px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Total Amount Only
             </button>
           </div>
         </div>
@@ -514,7 +775,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
                 <div>
                   <label className="form-label" style={{ fontSize: '0.72rem' }}>
-                    Rate ({data.currency})
+                    Rate ({data.currency}){' '}
+                    {data.hideIndividualAmounts && (
+                      <span style={{ color: '#60a5fa', fontSize: '0.66rem', fontWeight: 500 }}>
+                        (Hidden on quote)
+                      </span>
+                    )}
                   </label>
                   <input
                     type="number"
@@ -527,7 +793,12 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
 
                 <div className="item-amount-box">
                   <label className="form-label" style={{ fontSize: '0.72rem' }}>
-                    Amount ({data.currency})
+                    Amount ({data.currency}){' '}
+                    {data.hideIndividualAmounts && (
+                      <span style={{ color: '#60a5fa', fontSize: '0.66rem', fontWeight: 500 }}>
+                        (Hidden on quote)
+                      </span>
+                    )}
                   </label>
                   <div
                     style={{
@@ -674,6 +945,28 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
               {data.currency} {data.grandTotal.toLocaleString('en-IN')}
             </div>
           </div>
+
+          {data.hideIndividualAmounts && (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                background: 'rgba(37, 99, 235, 0.12)',
+                border: '1px solid rgba(59, 130, 246, 0.35)',
+                borderRadius: '6px',
+                padding: '0.65rem 0.95rem',
+                fontSize: '0.78rem',
+                color: '#93c5fd',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+              }}
+            >
+              <Sparkles size={15} color="#60a5fa" style={{ flexShrink: 0 }} />
+              <span>
+                <b>Total Amount Only Mode Active:</b> The quotation lists selected services and their deliverables without individual prices. Only this Grand Total (<b>{data.currency} {data.grandTotal.toLocaleString('en-IN')}</b>) is visible to the client.
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

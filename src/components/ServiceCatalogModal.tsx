@@ -8,7 +8,12 @@ interface ServiceCatalogModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectService: (service: CategorizedService) => void;
-  onSelectMultiple?: (services: CategorizedService[]) => void;
+  onSelectMultiple?: (
+    services: CategorizedService[],
+    replaceExisting?: boolean,
+    hideAmounts?: boolean
+  ) => void;
+  initialHideAmounts?: boolean;
 }
 
 export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
@@ -16,34 +21,57 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
   onClose,
   onSelectService,
   onSelectMultiple,
+  initialHideAmounts = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedItems, setSelectedItems] = useState<CategorizedService[]>([]);
+  const [hideAmountsOnQuotation, setHideAmountsOnQuotation] = useState<boolean>(initialHideAmounts);
 
   if (!isOpen) return null;
 
-  const filteredCategories = SERVICE_CATEGORIES.map(cat => {
-    const services = cat.services.filter(s => {
-      const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          s.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchCat = activeCategory === 'all' || activeCategory === cat.id;
-      return matchSearch && matchCat;
-    });
-    return { ...cat, services };
-  }).filter(cat => cat.services.length > 0);
+  const filteredCategories =
+    activeCategory === 'selected'
+      ? [
+          {
+            id: 'selected',
+            code: '★',
+            title: 'SELECTED SERVICES ONLY',
+            color: '#3b82f6',
+            services: selectedItems.filter(
+              (s) =>
+                s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                s.description.toLowerCase().includes(searchTerm.toLowerCase())
+            ),
+          },
+        ].filter((cat) => cat.services.length > 0)
+      : SERVICE_CATEGORIES.map((cat) => {
+          const services = cat.services.filter((s) => {
+            const matchSearch =
+              s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              s.description.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchCat = activeCategory === 'all' || activeCategory === cat.id;
+            return matchSearch && matchCat;
+          });
+          return { ...cat, services };
+        }).filter((cat) => cat.services.length > 0);
 
   const toggleSelect = (service: CategorizedService) => {
-    if (selectedItems.some(i => i.name === service.name)) {
-      setSelectedItems(selectedItems.filter(i => i.name !== service.name));
+    if (selectedItems.some((i) => i.name === service.name)) {
+      setSelectedItems(selectedItems.filter((i) => i.name !== service.name));
     } else {
       setSelectedItems([...selectedItems, service]);
     }
   };
 
-  const handleAddSelected = () => {
+  const selectedTotal = selectedItems.reduce(
+    (acc, it) => acc + (Number(it.defaultPrice) || 0),
+    0
+  );
+
+  const handleApplySelected = (replaceExisting: boolean) => {
     if (onSelectMultiple && selectedItems.length > 0) {
-      onSelectMultiple(selectedItems);
+      onSelectMultiple(selectedItems, replaceExisting, hideAmountsOnQuotation);
       setSelectedItems([]);
       onClose();
     }
@@ -193,6 +221,37 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
               }}
             >
               All Categories
+            </button>
+            <button
+              onClick={() => setActiveCategory('selected')}
+              style={{
+                padding: '0.35rem 0.75rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                border: activeCategory === 'selected' ? '1px solid #3b82f6' : '1px solid #2d3748',
+                background: activeCategory === 'selected' ? '#1d4ed8' : '#0b0f19',
+                color: activeCategory === 'selected' ? '#ffffff' : selectedItems.length > 0 ? '#60a5fa' : '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              <span>★ View Only Selected</span>
+              <span
+                style={{
+                  background: activeCategory === 'selected' ? '#ffffff' : '#1f2937',
+                  color: activeCategory === 'selected' ? '#1d4ed8' : '#e2e8f0',
+                  padding: '0.05rem 0.4rem',
+                  borderRadius: '10px',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                }}
+              >
+                {selectedItems.length}
+              </span>
             </button>
             {SERVICE_CATEGORIES.map(cat => (
               <button
@@ -379,22 +438,72 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderTop: '1px solid #1f2937',
-          background: '#0b0f19',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <span style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-            {selectedItems.length} service(s) selected
-          </span>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div
+          style={{
+            padding: '1rem 1.5rem',
+            borderTop: '1px solid #1f2937',
+            background: '#0b0f19',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
+          {/* Left info & option */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>
+                {selectedItems.length} service(s) selected
+              </span>
+              {selectedItems.length > 0 && (
+                <span
+                  style={{
+                    fontSize: '0.82rem',
+                    color: '#60a5fa',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-mono)',
+                    background: 'rgba(37, 99, 235, 0.15)',
+                    padding: '0.15rem 0.5rem',
+                    borderRadius: '4px',
+                  }}
+                >
+                  Package Total: ₹{selectedTotal.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+
+            {/* User requested option: hide individual service amount, only total amount visible */}
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                color: hideAmountsOnQuotation ? '#60a5fa' : '#94a3b8',
+                userSelect: 'none',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={hideAmountsOnQuotation}
+                onChange={(e) => setHideAmountsOnQuotation(e.target.checked)}
+                style={{ accentColor: '#2563eb', cursor: 'pointer' }}
+              />
+              <span style={{ fontWeight: hideAmountsOnQuotation ? 600 : 400 }}>
+                Hide individual service amounts on quotation (Show Total Amount only)
+              </span>
+            </label>
+          </div>
+
+          {/* Right action buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <button
+              type="button"
               onClick={onClose}
               style={{
-                padding: '0.45rem 0.95rem',
+                padding: '0.45rem 0.85rem',
                 borderRadius: '6px',
                 background: '#1f2937',
                 border: '1px solid #374151',
@@ -405,11 +514,39 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
             >
               Cancel
             </button>
+
+            {/* Set as quotation (only selected services) */}
             <button
-              onClick={handleAddSelected}
+              type="button"
+              onClick={() => handleApplySelected(true)}
               disabled={selectedItems.length === 0}
+              title="Replace current quotation line items with ONLY these selected services"
               style={{
-                padding: '0.45rem 1.15rem',
+                padding: '0.45rem 1rem',
+                borderRadius: '6px',
+                background: selectedItems.length > 0 ? '#1d4ed8' : '#1f2937',
+                border: '1px solid rgba(59, 130, 246, 0.5)',
+                color: selectedItems.length > 0 ? '#ffffff' : '#64748b',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: selectedItems.length > 0 ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <Check size={14} />
+              <span>Set as Quotation (Only Selected)</span>
+            </button>
+
+            {/* Append to existing quotation */}
+            <button
+              type="button"
+              onClick={() => handleApplySelected(false)}
+              disabled={selectedItems.length === 0}
+              title="Append these services to the existing items on the quotation"
+              style={{
+                padding: '0.45rem 1rem',
                 borderRadius: '6px',
                 background: selectedItems.length > 0 ? '#2563eb' : '#1f2937',
                 border: 'none',
@@ -422,8 +559,8 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
                 gap: '0.4rem',
               }}
             >
-              <Sparkles size={13} />
-              <span>Add Selected ({selectedItems.length})</span>
+              <Plus size={14} />
+              <span>+ Add to Existing</span>
             </button>
           </div>
         </div>

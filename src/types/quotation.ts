@@ -48,4 +48,5 @@ export interface QuotationData {
   authorizedSignatoryName: string;
   authorizedSignatoryTitle: string;
   closingNote: string;
+  hideIndividualAmounts?: boolean; // When true, only service names/deliverables are visible without individual amounts; only total amount is visible
 }

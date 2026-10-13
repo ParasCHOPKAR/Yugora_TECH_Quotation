@@ -95,19 +95,24 @@ export default function Home() {
     showToast(`Added "${service.name}" to quotation`);
   };
 
-  const handleSelectMultipleServices = (services: CategorizedService[]) => {
-    const newItems = [
-      ...data.items,
-      ...services.map((s) => ({
-        id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        category: s.category,
-        title: s.name,
-        description: s.description,
-        quantity: 1,
-        rate: s.defaultPrice,
-        amount: s.defaultPrice,
-      })),
-    ];
+  const handleSelectMultipleServices = (
+    services: CategorizedService[],
+    replaceExisting: boolean = false,
+    hideAmounts?: boolean
+  ) => {
+    const formattedServices: ServiceItem[] = services.map((s) => ({
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      category: s.category,
+      title: s.name,
+      description: s.description,
+      quantity: 1,
+      rate: s.defaultPrice,
+      amount: s.defaultPrice,
+    }));
+
+    const newItems = replaceExisting
+      ? formattedServices
+      : [...data.items, ...formattedServices];
 
     const subtotal = newItems.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
     const discAmount = (subtotal * data.discountRate) / 100;
@@ -122,9 +127,15 @@ export default function Home() {
       discountAmount: discAmount,
       taxAmount,
       grandTotal,
+      hideIndividualAmounts:
+        hideAmounts !== undefined ? hideAmounts : data.hideIndividualAmounts,
     });
 
-    showToast(`Added ${services.length} services to quotation`);
+    showToast(
+      replaceExisting
+        ? `Quotation set to ${services.length} selected services (Total: ₹${grandTotal.toLocaleString('en-IN')})`
+        : `Added ${services.length} services to quotation`
+    );
   };
 
   return (
@@ -270,7 +281,13 @@ export default function Home() {
               justifyContent: 'center',
             }}
           >
-            <QuotationPreview data={data} onPrint={handlePrint} />
+            <QuotationPreview
+              data={data}
+              onPrint={handlePrint}
+              onToggleHideAmounts={(hide) =>
+                setData({ ...data, hideIndividualAmounts: hide })
+              }
+            />
           </div>
         )}
       </main>
@@ -281,6 +298,7 @@ export default function Home() {
         onClose={() => setIsCatalogOpen(false)}
         onSelectService={handleSelectServiceFromCatalog}
         onSelectMultiple={handleSelectMultipleServices}
+        initialHideAmounts={data.hideIndividualAmounts}
       />
     </div>
   );

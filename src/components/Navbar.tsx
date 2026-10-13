@@ -38,12 +38,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         gap: '0.85rem',
       }}>
         {/* Brand & Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <Image
             src="/logo.png"
             alt="Yugora Tech Logo"
-            width={36}
-            height={36}
+            width={42}
+            height={42}
             style={{ objectFit: 'contain' }}
             priority
           />
@@ -51,10 +51,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.45rem',
+              gap: '0.5rem',
             }}>
               <span className="navbar-brand-title" style={{
-                fontSize: '1.05rem',
+                fontSize: '1.18rem',
                 fontWeight: 700,
                 letterSpacing: '-0.01em',
                 color: '#ffffff',

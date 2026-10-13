@@ -17,11 +17,13 @@ import {
 interface QuotationPreviewProps {
   data: QuotationData;
   onPrint: () => void;
+  onToggleHideAmounts?: (hide: boolean) => void;
 }
 
 export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
   data,
   onPrint,
+  onToggleHideAmounts,
 }) => {
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [showPage2, setShowPage2] = useState<boolean>(true);
@@ -79,9 +81,57 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
           >
             {showPage2 ? '2 Pages' : '1 Page'}
           </span>
+          {data.hideIndividualAmounts && (
+            <span
+              style={{
+                fontSize: '0.7rem',
+                color: '#60a5fa',
+                background: 'rgba(37, 99, 235, 0.2)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                padding: '0.15rem 0.45rem',
+                borderRadius: '4px',
+                fontWeight: 600,
+              }}
+            >
+              Total Only Mode
+            </span>
+          )}
         </div>
 
         <div className="preview-control-bar-right" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {/* Hide individual amounts / Total Only toggle */}
+          {onToggleHideAmounts && (
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                color: data.hideIndividualAmounts ? '#60a5fa' : '#cbd5e1',
+                background: data.hideIndividualAmounts
+                  ? 'rgba(37, 99, 235, 0.18)'
+                  : '#1f2937',
+                border: data.hideIndividualAmounts
+                  ? '1px solid #3b82f6'
+                  : '1px solid #374151',
+                padding: '0.2rem 0.55rem',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title="When checked, hides individual service amounts on the quotation and displays only the Total Amount"
+            >
+              <input
+                type="checkbox"
+                checked={!!data.hideIndividualAmounts}
+                onChange={(e) => onToggleHideAmounts(e.target.checked)}
+                style={{ accentColor: '#2563eb', cursor: 'pointer' }}
+              />
+              <span>Total Only (No Line Rates)</span>
+            </label>
+          )}
+
           {/* Page toggle */}
           <label
             style={{
@@ -255,12 +305,13 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
               }}
             >
               {/* Brand Left */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div
                   style={{
                     position: 'relative',
-                    width: '68px',
-                    height: '68px',
+                    width: '92px',
+                    height: '92px',
+                    flexShrink: 0,
                   }}
                 >
                   <Image
@@ -274,7 +325,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                 <div>
                   <h1
                     style={{
-                      fontSize: '1.25rem',
+                      fontSize: '1.85rem',
                       fontWeight: 800,
                       color: '#17345b',
                       letterSpacing: '0.04em',
@@ -449,202 +500,482 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
               <p style={{ margin: 0 }}>{data.introMessage}</p>
             </div>
 
-            {/* Cost Breakdown Section Heading */}
+            {/* Cost Breakdown / Services Section Heading */}
             <div
               style={{
-                fontSize: '0.88rem',
-                fontWeight: 700,
-                color: '#17345b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 marginBottom: '0.65rem',
               }}
             >
-              Cost Breakdown :
+              <div
+                style={{
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  color: '#17345b',
+                }}
+              >
+                {data.hideIndividualAmounts
+                  ? 'Services & Scope of Deliverables :'
+                  : 'Cost Breakdown :'}
+              </div>
+              {data.hideIndividualAmounts && (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    color: '#1e40af',
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    padding: '0.15rem 0.55rem',
+                    borderRadius: '4px',
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Lump Sum Package
+                </span>
+              )}
             </div>
 
             {/* TABLE */}
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.85rem',
-                marginBottom: '1.5rem',
-                border: '1.5px solid #17345b',
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    backgroundColor: '#17345b',
-                    color: '#ffffff',
-                    fontWeight: 700,
-                  }}
-                >
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '0.6rem 0.85rem',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.02em',
-                      width: '68%',
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'right',
-                      padding: '0.6rem 0.85rem',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    Amount ({data.currency})
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((item, idx) => (
+            {data.hideIndividualAmounts ? (
+              /* LUMP SUM / TOTAL ONLY TABLE (NO INDIVIDUAL SERVICE AMOUNTS) */
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.85rem',
+                  marginBottom: '1.5rem',
+                  border: '1.5px solid #17345b',
+                }}
+              >
+                <thead>
                   <tr
-                    key={item.id || idx}
                     style={{
-                      borderBottom: '1px solid #cbd5e1',
-                      backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                      backgroundColor: '#17345b',
+                      color: '#ffffff',
+                      fontWeight: 700,
                     }}
                   >
-                    <td
+                    <th
                       style={{
-                        padding: '0.6rem 0.85rem',
-                        color: '#1e293b',
-                        verticalAlign: 'top',
+                        textAlign: 'center',
+                        padding: '0.6rem 0.5rem',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        width: '7%',
                       }}
                     >
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
-                        {item.title}
-                      </div>
-                      {item.description && (
+                      Sr.
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '0.6rem 0.85rem',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        width: '93%',
+                      }}
+                    >
+                      Scope of Services &amp; Deliverables Included
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item, idx) => (
+                    <tr
+                      key={item.id || idx}
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: '0.65rem 0.5rem',
+                          textAlign: 'center',
+                          fontWeight: 700,
+                          color: '#475569',
+                          verticalAlign: 'top',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        {String(idx + 1).padStart(2, '0')}
+                      </td>
+                      <td
+                        style={{
+                          padding: '0.65rem 0.85rem',
+                          color: '#1e293b',
+                          verticalAlign: 'top',
+                        }}
+                      >
                         <div
                           style={{
-                            fontSize: '0.76rem',
-                            color: '#64748b',
-                            marginTop: '0.2rem',
+                            fontWeight: 700,
+                            color: '#0f172a',
+                            fontSize: '0.88rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            flexWrap: 'wrap',
                           }}
                         >
-                          {item.description}
+                          <span>{item.title}</span>
+                          {item.category && (
+                            <span
+                              style={{
+                                fontSize: '0.66rem',
+                                fontWeight: 700,
+                                color: '#2563eb',
+                                backgroundColor: '#eff6ff',
+                                border: '1px solid #bfdbfe',
+                                borderRadius: '3px',
+                                padding: '0.08rem 0.35rem',
+                                letterSpacing: '0.03em',
+                                textTransform: 'uppercase',
+                              }}
+                            >
+                              {item.category}
+                            </span>
+                          )}
                         </div>
-                      )}
+                        {item.description && (
+                          <div
+                            style={{
+                              fontSize: '0.78rem',
+                              color: '#475569',
+                              marginTop: '0.25rem',
+                              lineHeight: '1.45',
+                            }}
+                          >
+                            {item.description}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* Subtotal if discount or tax exist */}
+                  {(data.discountAmount > 0 || data.taxAmount > 0) && (
+                    <tr
+                      style={{
+                        borderTop: '1.5px solid #17345b',
+                        borderBottom: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <td
+                        colSpan={2}
+                        style={{
+                          padding: '0.55rem 0.85rem',
+                          textAlign: 'right',
+                          color: '#1e293b',
+                          fontSize: '0.84rem',
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, marginRight: '1.5rem' }}>
+                          Package Subtotal:
+                        </span>
+                        <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                          {formatCurrency(data.subtotal)}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Discount if applicable */}
+                  {data.discountAmount > 0 && (
+                    <tr
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <td
+                        colSpan={2}
+                        style={{
+                          padding: '0.45rem 0.85rem',
+                          textAlign: 'right',
+                          color: '#475569',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        <span style={{ marginRight: '1.5rem' }}>
+                          Package Discount ({data.discountRate}%):
+                        </span>
+                        <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
+                          - {formatCurrency(data.discountAmount)}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Tax if applicable */}
+                  {data.taxAmount > 0 && (
+                    <tr
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      <td
+                        colSpan={2}
+                        style={{
+                          padding: '0.45rem 0.85rem',
+                          textAlign: 'right',
+                          color: '#475569',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        <span style={{ marginRight: '1.5rem' }}>
+                          GST / Tax ({data.taxRate}%):
+                        </span>
+                        <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
+                          + {formatCurrency(data.taxAmount)}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Grand Total Row */}
+                  <tr
+                    style={{
+                      borderTop: '2px solid #17345b',
+                      backgroundColor: '#f1f5f9',
+                    }}
+                  >
+                    <td
+                      colSpan={2}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'right',
+                        backgroundColor: '#eff6ff',
+                        borderTop: '2px solid #17345b',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          gap: '1.5rem',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            fontSize: '0.94rem',
+                            color: '#17345b',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                          }}
+                        >
+                          Total Package Investment / Grand Total :
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            fontSize: '1.15rem',
+                            color: '#17345b',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {formatCurrency(data.grandTotal)}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            ) : (
+              /* DETAILED ITEMIZED TABLE WITH INDIVIDUAL SERVICE AMOUNTS */
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.85rem',
+                  marginBottom: '1.5rem',
+                  border: '1.5px solid #17345b',
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: '#17345b',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '0.6rem 0.85rem',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        width: '68%',
+                      }}
+                    >
+                      Description
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'right',
+                        padding: '0.6rem 0.85rem',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      Amount ({data.currency})
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.items.map((item, idx) => (
+                    <tr
+                      key={item.id || idx}
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: '0.6rem 0.85rem',
+                          color: '#1e293b',
+                          verticalAlign: 'top',
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                          {item.title}
+                        </div>
+                        {item.description && (
+                          <div
+                            style={{
+                              fontSize: '0.76rem',
+                              color: '#64748b',
+                              marginTop: '0.2rem',
+                            }}
+                          >
+                            {item.description}
+                          </div>
+                        )}
+                      </td>
+                      <td
+                        style={{
+                          padding: '0.6rem 0.85rem',
+                          textAlign: 'right',
+                          fontWeight: 600,
+                          color: '#0f172a',
+                          verticalAlign: 'top',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {formatCurrency(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* Subtotal */}
+                  <tr
+                    style={{
+                      borderTop: '1.5px solid #17345b',
+                      borderBottom: '1px solid #cbd5e1',
+                      fontWeight: 600,
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: '0.55rem 0.85rem',
+                        color: '#1e293b',
+                      }}
+                    >
+                      Subtotal
                     </td>
                     <td
                       style={{
-                        padding: '0.6rem 0.85rem',
+                        padding: '0.55rem 0.85rem',
                         textAlign: 'right',
-                        fontWeight: 600,
-                        color: '#0f172a',
-                        verticalAlign: 'top',
-                        whiteSpace: 'nowrap',
+                        color: '#1e293b',
                       }}
                     >
-                      {formatCurrency(item.amount)}
+                      {formatCurrency(data.subtotal)}
                     </td>
                   </tr>
-                ))}
 
-                {/* Subtotal */}
-                <tr
-                  style={{
-                    borderTop: '1.5px solid #17345b',
-                    borderBottom: '1px solid #cbd5e1',
-                    fontWeight: 600,
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: '0.55rem 0.85rem',
-                      color: '#1e293b',
-                    }}
-                  >
-                    Subtotal
-                  </td>
-                  <td
-                    style={{
-                      padding: '0.55rem 0.85rem',
-                      textAlign: 'right',
-                      color: '#1e293b',
-                    }}
-                  >
-                    {formatCurrency(data.subtotal)}
-                  </td>
-                </tr>
+                  {/* Optional Discount */}
+                  {data.discountAmount > 0 && (
+                    <tr
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        fontSize: '0.82rem',
+                        color: '#475569',
+                      }}
+                    >
+                      <td style={{ padding: '0.45rem 0.85rem' }}>
+                        Discount ({data.discountRate}%)
+                      </td>
+                      <td style={{ padding: '0.45rem 0.85rem', textAlign: 'right' }}>
+                        - {formatCurrency(data.discountAmount)}
+                      </td>
+                    </tr>
+                  )}
 
-                {/* Optional Discount */}
-                {data.discountAmount > 0 && (
+                  {/* Optional GST / Tax */}
+                  {data.taxAmount > 0 && (
+                    <tr
+                      style={{
+                        borderBottom: '1px solid #cbd5e1',
+                        fontSize: '0.82rem',
+                        color: '#475569',
+                      }}
+                    >
+                      <td style={{ padding: '0.45rem 0.85rem' }}>
+                        GST / Tax ({data.taxRate}%)
+                      </td>
+                      <td style={{ padding: '0.45rem 0.85rem', textAlign: 'right' }}>
+                        + {formatCurrency(data.taxAmount)}
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Grand Total */}
                   <tr
                     style={{
-                      borderBottom: '1px solid #cbd5e1',
-                      fontSize: '0.82rem',
-                      color: '#475569',
+                      borderTop: '2px solid #17345b',
+                      backgroundColor: '#ffffff',
                     }}
                   >
-                    <td style={{ padding: '0.45rem 0.85rem' }}>
-                      Discount ({data.discountRate}%)
+                    <td
+                      style={{
+                        padding: '0.65rem 0.85rem',
+                        fontWeight: 800,
+                        fontSize: '0.92rem',
+                        color: '#17345b',
+                      }}
+                    >
+                      Grand Total
                     </td>
-                    <td style={{ padding: '0.45rem 0.85rem', textAlign: 'right' }}>
-                      - {formatCurrency(data.discountAmount)}
-                    </td>
-                  </tr>
-                )}
-
-                {/* Optional GST / Tax */}
-                {data.taxAmount > 0 && (
-                  <tr
-                    style={{
-                      borderBottom: '1px solid #cbd5e1',
-                      fontSize: '0.82rem',
-                      color: '#475569',
-                    }}
-                  >
-                    <td style={{ padding: '0.45rem 0.85rem' }}>
-                      GST / Tax ({data.taxRate}%)
-                    </td>
-                    <td style={{ padding: '0.45rem 0.85rem', textAlign: 'right' }}>
-                      + {formatCurrency(data.taxAmount)}
+                    <td
+                      style={{
+                        padding: '0.65rem 0.85rem',
+                        textAlign: 'right',
+                        fontWeight: 800,
+                        fontSize: '0.95rem',
+                        color: '#17345b',
+                      }}
+                    >
+                      {formatCurrency(data.grandTotal)}
                     </td>
                   </tr>
-                )}
-
-                {/* Grand Total */}
-                <tr
-                  style={{
-                    borderTop: '2px solid #17345b',
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: '0.65rem 0.85rem',
-                      fontWeight: 800,
-                      fontSize: '0.92rem',
-                      color: '#17345b',
-                    }}
-                  >
-                    Grand Total
-                  </td>
-                  <td
-                    style={{
-                      padding: '0.65rem 0.85rem',
-                      textAlign: 'right',
-                      fontWeight: 800,
-                      fontSize: '0.95rem',
-                      color: '#17345b',
-                    }}
-                  >
-                    {formatCurrency(data.grandTotal)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            )}
 
             {/* Conditional Content based on 1-Page vs 2-Page mode */}
             {showPage2 ? (
@@ -838,8 +1169,8 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                   paddingBottom: '1rem',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ position: 'relative', width: '48px', height: '48px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                  <div style={{ position: 'relative', width: '60px', height: '60px', flexShrink: 0 }}>
                     <Image
                       src="/logo.png"
                       alt={data.company.name}
@@ -850,7 +1181,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                   <div>
                     <h2
                       style={{
-                        fontSize: '1.1rem',
+                        fontSize: '1.35rem',
                         fontWeight: 800,
                         color: '#17345b',
                         letterSpacing: '0.04em',
@@ -860,7 +1191,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({
                     >
                       {data.company.name}
                     </h2>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                    <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
                       Commercial Terms &amp; Authorization
                     </span>
                   </div>
