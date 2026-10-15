@@ -5,7 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { QuotationForm } from '@/components/QuotationForm';
 import { QuotationPreview } from '@/components/QuotationPreview';
 import { ServiceCatalogModal } from '@/components/ServiceCatalogModal';
-import { DEFAULT_QUOTATION_DATA, CategorizedService } from '@/data/services';
+import { DEFAULT_QUOTATION_DATA, CONNECTIT_QUOTATION_DATA, CategorizedService } from '@/data/services';
 import { QuotationData, ServiceItem } from '@/types/quotation';
 import { Sparkles, CheckCircle2, SlidersHorizontal, Download } from 'lucide-react';
 
@@ -62,6 +62,11 @@ export default function Home() {
   const handleLoadTemplate = () => {
     setData(DEFAULT_QUOTATION_DATA);
     showToast('Loaded reference template sample.');
+  };
+
+  const handleLoadConnectitTemplate = () => {
+    setData(CONNECTIT_QUOTATION_DATA);
+    showToast('Loaded CONNECTit Business Automation & Growth Plan sample.');
   };
 
   // Add a service selected from the Catalog Modal
@@ -145,6 +150,7 @@ export default function Home() {
         onPrint={handlePrint}
         onReset={handleReset}
         onLoadTemplate={handleLoadTemplate}
+        onLoadConnectitTemplate={handleLoadConnectitTemplate}
         viewMode={viewMode}
         setViewMode={setViewMode}
       />

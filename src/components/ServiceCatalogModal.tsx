@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { SERVICE_CATEGORIES, CategorizedService } from '@/data/services';
-import { Plus, X, Search, Check, Sparkles, Layers } from 'lucide-react';
+import { SERVICE_CATEGORIES, CategorizedService, CONNECTIT_ANNUAL_PLANS } from '@/data/services';
+import { Plus, X, Search, Check, Sparkles, Layers, Zap } from 'lucide-react';
 
 interface ServiceCatalogModalProps {
   isOpen: boolean;
@@ -100,8 +100,8 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
           boxShadow: '0 20px 45px rgba(0, 0, 0, 0.6)',
           borderRadius: '10px',
           width: '100%',
-          maxWidth: '920px',
-          maxHeight: '90vh',
+          maxWidth: '960px',
+          maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -138,10 +138,10 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
                 letterSpacing: '-0.01em',
                 margin: 0,
               }}>
-                Add Services to Quotation
+                Service &amp; Automation Catalog
               </h3>
               <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
-                Select from Digital Presence, Marketing, Enterprise Software & AI catalogs
+                WhatsApp After-Call, Chatbots, Smart AI-Review QR Kit, Digital Branding &amp; Tech Solutions
               </p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
             <Search size={16} style={{ position: 'absolute', left: '1rem', color: '#64748b' }} />
             <input
               type="text"
-              placeholder="Search services (e.g. ERP, SEO, Chatbot, Dynamic Website)..."
+              placeholder="Search services or plans (e.g. WhatsApp, SMS, AI Review QR, Chatbot, Starter, Advance)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -264,8 +264,8 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
                   fontWeight: 600,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  border: activeCategory === cat.id ? '1px solid #3b82f6' : '1px solid #2d3748',
-                  background: activeCategory === cat.id ? '#1e3a8a' : '#111827',
+                  border: activeCategory === cat.id ? `1px solid ${cat.color}` : '1px solid #2d3748',
+                  background: activeCategory === cat.id ? `${cat.color}25` : '#111827',
                   color: activeCategory === cat.id ? '#ffffff' : '#94a3b8',
                 }}
               >
@@ -284,6 +284,172 @@ export const ServiceCatalogModal: React.FC<ServiceCatalogModalProps> = ({
           flexDirection: 'column',
           gap: '1.5rem',
         }}>
+          {/* Featured CONNECTit Plans Showcase Card when 'all' or 'connectit-annual-plans' is selected */}
+          {(activeCategory === 'all' || activeCategory === 'connectit-annual-plans') && !searchTerm && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(37, 211, 102, 0.08) 0%, rgba(30, 58, 138, 0.15) 100%)',
+                border: '1px solid rgba(37, 211, 102, 0.3)',
+                borderRadius: '10px',
+                padding: '1.15rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.9rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{
+                    background: '#25d366',
+                    color: '#0b0f19',
+                    padding: '0.25rem 0.55rem',
+                    borderRadius: '4px',
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.04em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                  }}>
+                    <Zap size={13} fill="#0b0f19" />
+                    <span>CONNECTit</span>
+                  </div>
+                  <h4 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, color: '#f8fafc' }}>
+                    Business Automation &amp; Branding Annual Plans
+                  </h4>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                    (Trusted by 15,000+ Businesses Across India)
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#4ade80', fontWeight: 600 }}>
+                  Per Year Pricing • Hardware Delivered
+                </span>
+              </div>
+
+              {/* Grid of the 6 core plans */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: '0.75rem',
+                }}
+              >
+                {CONNECTIT_ANNUAL_PLANS.map((plan) => {
+                  const isSelected = selectedItems.some(i => i.name === plan.serviceItem.name);
+                  return (
+                    <div
+                      key={plan.id}
+                      onClick={() => toggleSelect(plan.serviceItem)}
+                      style={{
+                        background: isSelected ? 'rgba(37, 211, 102, 0.18)' : '#0b0f19',
+                        border: isSelected ? '1.5px solid #25d366' : plan.popular ? '1.5px solid rgba(37, 211, 102, 0.5)' : '1px solid #1f2937',
+                        borderRadius: '8px',
+                        padding: '0.85rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '0.6rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#ffffff' }}>
+                            {plan.name}
+                          </span>
+                          <span style={{
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            color: '#4ade80',
+                            fontFamily: 'var(--font-mono)',
+                          }}>
+                            ₹{plan.price.toLocaleString('en-IN')}<span style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 400 }}>/yr</span>
+                          </span>
+                        </div>
+
+                        {plan.badge && (
+                          <span style={{
+                            display: 'inline-block',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: '3px',
+                            background: plan.popular ? 'rgba(37, 211, 102, 0.25)' : 'rgba(59, 130, 246, 0.2)',
+                            color: plan.popular ? '#4ade80' : '#60a5fa',
+                            marginBottom: '0.45rem',
+                          }}>
+                            {plan.badge}
+                          </span>
+                        )}
+
+                        <ul style={{
+                          margin: 0,
+                          paddingLeft: '1rem',
+                          fontSize: '0.72rem',
+                          color: '#cbd5e1',
+                          lineHeight: '1.45',
+                        }}>
+                          {plan.features.slice(0, 3).map((feat, i) => (
+                            <li key={i}>{feat}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingTop: '0.45rem',
+                        borderTop: '1px solid #1f2937',
+                      }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectService(plan.serviceItem);
+                            onClose();
+                          }}
+                          style={{
+                            background: '#1f2937',
+                            border: '1px solid #374151',
+                            borderRadius: '5px',
+                            color: '#e2e8f0',
+                            padding: '0.25rem 0.55rem',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                          }}
+                        >
+                          <Plus size={12} />
+                          <span>Direct Add</span>
+                        </button>
+
+                        <div style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '4px',
+                          border: isSelected ? '1px solid #25d366' : '1px solid #4b5563',
+                          background: isSelected ? '#25d366' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#0b0f19',
+                          fontWeight: 800,
+                        }}>
+                          {isSelected && <Check size={13} strokeWidth={3} />}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {filteredCategories.map(cat => (
             <div key={cat.id}>
               <div style={{

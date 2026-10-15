@@ -2,12 +2,13 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Printer, Sparkles, RotateCcw, Eye, Edit3, Columns } from 'lucide-react';
+import { Printer, Sparkles, RotateCcw, Eye, Edit3, Columns, Zap } from 'lucide-react';
 
 interface NavbarProps {
   onPrint: () => void;
   onReset: () => void;
   onLoadTemplate: () => void;
+  onLoadConnectitTemplate?: () => void;
   viewMode: 'split' | 'edit' | 'preview';
   setViewMode: (mode: 'split' | 'edit' | 'preview') => void;
 }
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onPrint,
   onReset,
   onLoadTemplate,
+  onLoadConnectitTemplate,
   viewMode,
   setViewMode,
 }) => {
@@ -173,6 +175,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Sparkles size={13} color="#94a3b8" />
             <span>Load Sample</span>
           </button>
+
+          {onLoadConnectitTemplate && (
+            <button
+              onClick={onLoadConnectitTemplate}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.45rem 0.8rem',
+                background: 'rgba(37, 211, 102, 0.12)',
+                border: '1px solid rgba(37, 211, 102, 0.35)',
+                borderRadius: '6px',
+                color: '#4ade80',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                transition: 'all 0.15s ease',
+              }}
+              title="Load Official CONNECTit Automation Proposal"
+            >
+              <Zap size={13} fill="#4ade80" />
+              <span>CONNECTit Proposal</span>
+            </button>
+          )}
 
           <button
             onClick={onReset}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { QuotationData, ServiceItem } from '@/types/quotation';
-import { SERVICE_CATEGORIES } from '@/data/services';
+import { SERVICE_CATEGORIES, CONNECTIT_ANNUAL_PLANS } from '@/data/services';
 import {
   Plus,
   Trash2,
@@ -515,6 +515,83 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
           </div>
         </div>
 
+        {/* Quick Add CONNECTit Automation Package */}
+        <div
+          style={{
+            background: 'linear-gradient(90deg, rgba(37, 211, 102, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+            border: '1px solid rgba(37, 211, 102, 0.25)',
+            borderRadius: '8px',
+            padding: '0.75rem 1rem',
+            marginTop: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                color: '#25d366',
+                background: 'rgba(37, 211, 102, 0.15)',
+                border: '1px solid rgba(37, 211, 102, 0.35)',
+                padding: '0.15rem 0.45rem',
+                borderRadius: '4px',
+                letterSpacing: '0.04em',
+              }}
+            >
+              CONNECTit
+            </span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f8fafc' }}>
+              Add Annual Automation Plan:
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+            {CONNECTIT_ANNUAL_PLANS.map((plan) => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => {
+                  const newItem: ServiceItem = {
+                    id: `item-${Date.now()}-${plan.id}`,
+                    category: plan.serviceItem.category,
+                    title: plan.serviceItem.name,
+                    description: plan.serviceItem.description,
+                    quantity: 1,
+                    rate: plan.serviceItem.defaultPrice,
+                    amount: plan.serviceItem.defaultPrice,
+                  };
+                  recalculateTotals([...data.items, newItem], data.discountRate, data.taxRate);
+                }}
+                title={plan.tagline}
+                style={{
+                  background: plan.popular ? 'rgba(37, 211, 102, 0.2)' : '#111827',
+                  border: plan.popular ? '1px solid #25d366' : '1px solid #374151',
+                  color: plan.popular ? '#4ade80' : '#cbd5e1',
+                  padding: '0.3rem 0.6rem',
+                  borderRadius: '5px',
+                  fontSize: '0.74rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>{plan.name}</span>
+                <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+                  ₹{plan.price.toLocaleString('en-IN')}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Pricing Display Mode Card / Selector */}
         <div
           style={{
@@ -664,41 +741,18 @@ export const QuotationForm: React.FC<QuotationFormProps> = ({
                     style={{ fontSize: '0.82rem' }}
                   >
                     <option value={item.title}>{item.title} (Current)</option>
-                    <optgroup label="── 01 DIGITAL PRESENCE ──">
-                      {SERVICE_CATEGORIES[0].services.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="── 02 DIGITAL MARKETING ──">
-                      {SERVICE_CATEGORIES[1].services.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="── 03 SOFTWARE & ENTERPRISE ──">
-                      {SERVICE_CATEGORIES[2].services.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="── 04 AI & ADVANCED TECH ──">
-                      {SERVICE_CATEGORIES[3].services.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="── SUPPORT & MAINTENANCE ──">
-                      {SERVICE_CATEGORIES[4].services.map((s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
-                        </option>
-                      ))}
-                    </optgroup>
+                    {SERVICE_CATEGORIES.map((cat) => (
+                      <optgroup
+                        key={cat.id}
+                        label={`── ${cat.code ? cat.code + ' ' : ''}${cat.title} ──`}
+                      >
+                        {cat.services.map((s) => (
+                          <option key={s.name} value={s.name}>
+                            {s.name} (₹{s.defaultPrice.toLocaleString('en-IN')})
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
 
